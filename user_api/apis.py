@@ -154,6 +154,7 @@ def make_reservation():
         for i in seats_booked:
             return_string_after_reservation += f" {i[0]}-{i[1]},"
         return return_string_after_reservation[:-1]
+    return "Mis-Match in Content-Type"
 
 def get_reservations():
     
