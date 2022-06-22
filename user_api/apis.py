@@ -73,7 +73,7 @@ def get_screening():
     content_type = request.headers.get("Content-Type")
     if (content_type == "application/json"):
         data = request.get_json()
-        if "movie_id" not in data or not data:
+        if "movie_id" not in data or not data or isinstance(data["movie_id"], int):
             return "Incorrect or no data provided"
         movie_id = data["movie_id"]
         session = get_session()
@@ -97,7 +97,7 @@ def make_reservation():
     content_type = request.headers.get("Content-Type")
     if (content_type == "application/json"):
         data = request.get_json()
-        if "screening_id" not in data or "num_seats" not in data or not data:
+        if "screening_id" not in data or "num_seats" not in data or not data or isinstance(data["screening_id"], int) or isinstance(data["num_seats"]):
             return "Incorrect or no data provided"
         
         request_screening_id = data["screening_id"]
