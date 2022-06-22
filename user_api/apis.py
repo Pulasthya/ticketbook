@@ -11,7 +11,7 @@ def sign_up():
     content_type = request.headers.get('Content-Type')
     if (content_type == "application/json"):
         data = request.get_json()
-        if "name" not in data or "password" not in data or "phone_number" not in data or "age" not in data:
+        if "name" not in data or "password" not in data or "phone_number" not in data or "age" not in data or not isinstance(data["name"], str) or not isinstance(data["password"], str) or not isinstance(data["phone_number"], str) or not isinstance(data["age"], int) or len(data["phone_number"]) != 10:
             return "Incorrect or no data provided"
         new_customer = Customer(data["name"], data["phone_number"], data["age"], generate_password_hash(data["password"], method='sha256'))
         session = get_session()
@@ -26,7 +26,7 @@ def login():
     content_type = request.headers.get('Content-Type')
     if (content_type == "application/json"):
         data = request.get_json()
-        if "phone_number" not in data or "password" not in data:
+        if "phone_number" not in data or "password" not in data or not isinstance(data["phone_number"], str) or not isinstance(data["password"], str) or len(data["phone_number"]) != 10:
             return "Incorrect or no data provided"
         session = get_session()
         customer_qry_result = session.query(Customer).filter(Customer.phone_number == data["phone_number"])
@@ -73,7 +73,8 @@ def get_screening():
     content_type = request.headers.get("Content-Type")
     if (content_type == "application/json"):
         data = request.get_json()
-        if "movie_id" not in data or not data or isinstance(data["movie_id"], int):
+        print(type(data["movie_id"]))
+        if "movie_id" not in data or not data or not isinstance(data["movie_id"], str):
             return "Incorrect or no data provided"
         movie_id = data["movie_id"]
         session = get_session()
@@ -97,7 +98,8 @@ def make_reservation():
     content_type = request.headers.get("Content-Type")
     if (content_type == "application/json"):
         data = request.get_json()
-        if "screening_id" not in data or "num_seats" not in data or not data or isinstance(data["screening_id"], int) or isinstance(data["num_seats"]):
+        print(type(data["screening_id"]))
+        if "screening_id" not in data or "num_seats" not in data or not data or not isinstance(data["screening_id"], str) or not isinstance(data["num_seats"], int):
             return "Incorrect or no data provided"
         
         request_screening_id = data["screening_id"]
