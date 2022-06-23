@@ -13,8 +13,11 @@ def sign_up():
         data = request.get_json()
         if "name" not in data or "password" not in data or "phone_number" not in data or "age" not in data or not isinstance(data["name"], str) or not isinstance(data["password"], str) or not isinstance(data["phone_number"], str) or not isinstance(data["age"], int) or len(data["phone_number"]) != 10:
             return jsonify({"message": "Incorrect or no data provided"}), 400
-        new_customer = Customer(data["name"], data["phone_number"], data["age"], generate_password_hash(data["password"], method='sha256'))
         session = get_session()
+        if session.query(Customer).filter(Customer.phone_number == data["phone_number"]).all():
+            session.close()
+            return jsonify({"message": "Customer already exists"}), 400
+        new_customer = Customer(data["name"], data["phone_number"], data["age"], generate_password_hash(data["password"], method='sha256'))
         session.add(new_customer)
         session.commit()
         session.close()
