@@ -259,7 +259,7 @@ def get_reservations():
     customer_reservations = {}
     for reservation in customer_reservations_list:
         
-        customer_reservations[reservation.id] = {"Auditorium":reservation.screening.auditorium.name}
+        customer_reservations[reservation.id] = {"Auditorium":reservation.screening.auditorium.name, "Movie": reservation.screening.movie.movie_name}
         # print(type(reservation.reserve_seating))
         customer_reservations[reservation.id]["Seating"] = []
         for i in reservation.reserve_seating:
