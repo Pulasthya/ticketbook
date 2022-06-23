@@ -76,8 +76,6 @@ class Screening(Base):
     date = Column(Date, nullable=False)
     end_time = Column(Time, nullable=False)
     seats_available = Column(Integer, default=20)
-    seat_row_available = Column(CHAR, default='A')
-    seat_col_available = Column(Integer, default=1)
 
     auditorium = relationship("Auditorium", back_populates="screeings")
     movie = relationship("Movie", back_populates="screenings")
@@ -89,7 +87,7 @@ class Screening(Base):
         self.end_time = end_time
 
     def __repr__(self) -> str:
-        return f"Auditorium : {self.auditorium.name}, Scr ID : {self.id}, Seats Available : {self.seats_available} Movie : {self.movie.movie_name}, Start-Time : {self.start_time}, Seat Available : {self.seat_row_available}-{self.seat_col_available}"
+        return f"Auditorium : {self.auditorium.name}, Scr ID : {self.id}, Seats Available : {self.seats_available} Movie : {self.movie.movie_name}, Start-Time : {self.start_time}"
 
 class Seat(Base):
 
@@ -137,8 +135,8 @@ class Reservation_Seating(Base):
     reserve_id = Column(String(36), ForeignKey("reservation.id"), default=generate_uuid)
     seat_id = Column(String(36), ForeignKey("seat.id"), default=generate_uuid)
 
-    def __repr__(self) -> str:
-        return f"{self.seats.row}-{self.seats.col} "
+    # def __repr__(self) -> str:
+    #     return f"{self.seats.row}-{self.seats.col} "
 
     reservation = relationship("Reservation", back_populates="reserve_seating")
     seats = relationship("Seat", back_populates="reservation_seatings")
