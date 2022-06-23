@@ -3,6 +3,7 @@ from flask import jsonify, request
 from werkzeug.security import generate_password_hash, check_password_hash
 from sql_utils.utils import get_session
 from tables.tables import *
+from user_api.helper import *
 
 session_customerID = None
 
@@ -57,7 +58,6 @@ def logout():
     return jsonify({"message": "Successfully logged out"})
 
 def get_movies():
-    
     if not session_customerID:
         return jsonify({"message":"Login to continue"}), 400
     session = get_session()
@@ -92,13 +92,87 @@ def get_screening():
         screenings = {}
         for result in qry_result:
             # print(type(result.id), type(result.auditorium.name), type(result.movie.movie_name), type(result.date), type(result.start_time))
-            screenings[result.id] = {"Auditorium":result.auditorium.name, "Movie Name":result.movie.movie_name, "Date":str(result.date), "Start-Time": str(result.start_time)}
+            screenings[result.id] = {"Auditorium":result.auditorium.name, "Movie Name":result.movie.movie_name, "Date":str(result.date), "Start-Time": str(result.start_time), "Available Seats": list(get_available_seats_screening(result.id))}
         # print(type(screenings), screenings)
         session.close()
         return json.dumps(screenings)
     return jsonify({"message":"Mis-Match in Content-Type"}), 400
 
 def make_reservation():
+    print(session_customerID)
+
+    if not session_customerID:
+        return jsonify({"message": "Login to continue"}), 400
+    
+    content_type = request.headers.get("Content-Type")
+    if (content_type == "application/json"):
+        data = request.get_json()
+        # print(data["screening_id"], data["seats"])
+        # print(type(data["screening_id"]), type(data["seats"]))
+        if not data or "screening_id" not in data or "seats" not in data or not isinstance(data["screening_id"], str) or not isinstance(data["seats"], list):
+            print("Hello boossss")
+            return jsonify({"Message":"Incorrect or no data provided"}), 400
+        for seat in data["seats"]:
+            seat_split = seat.split("-")
+            if not isinstance(seat, str) or not seat_split[0].isalpha() or not seat_split[1].isnumeric():
+                print("yakappaaa")
+                return jsonify({"Message":"Incorrect or no data provided"}), 400
+        
+        session = get_session()
+        screening_qry_result = session.query(Screening).filter(Screening.id == data["screening_id"]).all()
+        if not screening_qry_result:
+            return jsonify({"Message": "Enter a valid screening id"}), 400
+        screening_qry_result = screening_qry_result[0]
+
+        if screening_qry_result.seats_available == 0:
+            return jsonify({"Message": "All seats are booked"}), 400
+        
+        request_num_seats = len(data["seats"])
+        if request_num_seats < 1 or request_num_seats < len(data["seats"]):
+            return jsonify({"Message": "Please request for a valid number of seats"}), 400
+
+        available_seats_request_screening = get_available_seats_screening(data["screening_id"])
+        for seat in data["seats"]:
+            if seat not in available_seats_request_screening:
+                session.close()
+                return jsonify({"message": "Make sure to enter valid seats"}), 400
+        
+        reserve = Reservation(request_num_seats)
+        loggedin_customer = session.query(Customer).filter(Customer.id == session_customerID).all()[0]
+        reserve.customer = loggedin_customer
+        reserve.screening = screening_qry_result
+
+        for seat in data["seats"]:
+            seat_split = seat.split("-")
+            seat_row = seat_split[0]
+            seat_col = seat_split[1]
+            seat_reserve = Reservation_Seating()
+            seat_qry_result = session.query(Seat).filter(Seat.audi_id == screening_qry_result.audi_id).filter(Seat.row == seat_row).filter(Seat.col == seat_col).all()
+            # print(seat_qry_result)
+            seat_qry_result = seat_qry_result[0]
+            seat_reserve.reservation = reserve
+            seat_reserve.seats = seat_qry_result
+            session.add(seat_reserve)
+
+        # print(reserve.customer)
+        # print(reserve.screening)
+        # for i in reserve.reserve_seating:
+        #     print("Here")
+        #     print(i.seats)
+        # print(reserve.reserve_seating)
+        screening_qry_result.seat_row_available = seat_row
+        screening_qry_result.seat_col_available = seat_col
+        screening_qry_result.seats_available -= request_num_seats
+        session.add(reserve)
+        session.commit()
+        session.close()
+
+        return jsonify({"Message": "Reservation successful"})
+
+
+    return jsonify({"Message": "Mis-Match in Content-Type"}), 400
+
+def make_reservation_old():
 
     if not session_customerID:
         return jsonify({"message": "Login to continue"}), 400
