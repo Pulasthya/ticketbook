@@ -40,9 +40,11 @@ def login():
         session = get_session()
         customer_qry_result = session.query(Customer).filter(Customer.phone_number == data["phone_number"])
         if not customer_qry_result:
+            session.close()
             return jsonify({"message": f"User {data['phone_number']} does not exist"}), 400
         user = customer_qry_result[0]
         if not (check_password_hash(user.password, data["password"])):
+            session.close()
             return jsonify({"message": "Invalid credentials passed"}), 400
         
         session_customerID = user.id
@@ -88,6 +90,7 @@ def get_screening():
         qry_result = session.query(Screening).filter(Screening.movie_id == movie_id).all()
         # print(qry_result)
         if not qry_result:
+            session.close()
             return jsonify({"Message":"Sorry, currently no screenings"}), 400
         screenings = {}
         for result in qry_result:
@@ -110,25 +113,26 @@ def make_reservation():
         # print(data["screening_id"], data["seats"])
         # print(type(data["screening_id"]), type(data["seats"]))
         if not data or "screening_id" not in data or "seats" not in data or not isinstance(data["screening_id"], str) or not isinstance(data["seats"], list):
-            print("Hello boossss")
             return jsonify({"Message":"Incorrect or no data provided"}), 400
         for seat in data["seats"]:
             seat_split = seat.split("-")
             if not isinstance(seat, str) or not seat_split[0].isalpha() or not seat_split[1].isnumeric():
-                print("yakappaaa")
                 return jsonify({"Message":"Incorrect or no data provided"}), 400
         
         session = get_session()
         screening_qry_result = session.query(Screening).filter(Screening.id == data["screening_id"]).all()
         if not screening_qry_result:
+            session.close()
             return jsonify({"Message": "Enter a valid screening id"}), 400
         screening_qry_result = screening_qry_result[0]
 
         if screening_qry_result.seats_available == 0:
+            session.close()
             return jsonify({"Message": "All seats are booked"}), 400
         
         request_num_seats = len(data["seats"])
         if request_num_seats < 1 or request_num_seats < len(data["seats"]):
+            session.close()
             return jsonify({"Message": "Please request for a valid number of seats"}), 400
 
         available_seats_request_screening = get_available_seats_screening(data["screening_id"])
