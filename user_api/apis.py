@@ -23,24 +23,26 @@ def sign_up():
 
 def login():
 
-    content_type = request.headers.get('Content-Type')
-    if (content_type == "application/json"):
-        data = request.get_json()
-        if "phone_number" not in data or "password" not in data or not isinstance(data["phone_number"], str) or not isinstance(data["password"], str) or len(data["phone_number"]) != 10:
-            return "Incorrect or no data provided"
-        session = get_session()
-        customer_qry_result = session.query(Customer).filter(Customer.phone_number == data["phone_number"])
-        if not customer_qry_result:
-            return f"User {data['phone_number']} does not exist"
-        user = customer_qry_result[0]
-        if not (check_password_hash(user.password, data["password"])):
-            return "Invalid credentials passed"
-        
-        global session_customerID
-        session_customerID = user.id
-        session.close()
-        return f"Successfully logged in {user.name}"
-    return "Mis-Match in Content-Type"
+    if session_customerID == None:
+        content_type = request.headers.get('Content-Type')
+        if (content_type == "application/json"):
+            data = request.get_json()
+            if "phone_number" not in data or "password" not in data or not isinstance(data["phone_number"], str) or not isinstance(data["password"], str) or len(data["phone_number"]) != 10:
+                return "Incorrect or no data provided"
+            session = get_session()
+            customer_qry_result = session.query(Customer).filter(Customer.phone_number == data["phone_number"])
+            if not customer_qry_result:
+                return f"User {data['phone_number']} does not exist"
+            user = customer_qry_result[0]
+            if not (check_password_hash(user.password, data["password"])):
+                return "Invalid credentials passed"
+            
+            global session_customerID
+            session_customerID = user.id
+            session.close()
+            return f"Successfully logged in {user.name}"
+        return "Mis-Match in Content-Type"
+    return "Currently logged in\nLogout and try again"
 
 def logout():
     global session_customerID
