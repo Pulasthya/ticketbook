@@ -38,7 +38,7 @@ def login():
         if "phone_number" not in data or "password" not in data or not isinstance(data["phone_number"], str) or not isinstance(data["password"], str) or len(data["phone_number"]) != 10:
             return jsonify({"message": "Incorrect or no data provided"}), 400
         session = get_session()
-        customer_qry_result = session.query(Customer).filter(Customer.phone_number == data["phone_number"])
+        customer_qry_result = session.query(Customer).filter(Customer.phone_number == data["phone_number"]).all()
         if not customer_qry_result:
             session.close()
             return jsonify({"message": f"User {data['phone_number']} does not exist"}), 400
