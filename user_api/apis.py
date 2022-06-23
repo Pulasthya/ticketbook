@@ -1,5 +1,5 @@
 import json
-from flask import request
+from flask import jsonify, request
 from werkzeug.security import generate_password_hash, check_password_hash
 from sql_utils.utils import get_session
 from tables.tables import *
@@ -12,49 +12,49 @@ def sign_up():
     if (content_type == "application/json"):
         data = request.get_json()
         if "name" not in data or "password" not in data or "phone_number" not in data or "age" not in data or not isinstance(data["name"], str) or not isinstance(data["password"], str) or not isinstance(data["phone_number"], str) or not isinstance(data["age"], int) or len(data["phone_number"]) != 10:
-            return "Incorrect or no data provided"
+            return jsonify({"message": "Incorrect or no data provided"}), 400
         new_customer = Customer(data["name"], data["phone_number"], data["age"], generate_password_hash(data["password"], method='sha256'))
         session = get_session()
         session.add(new_customer)
         session.commit()
         session.close()
-        return f"Account for user {data['name']} has been created successful"
-    return "Mis-Match in Content-Type"
+        return jsonify({"message": f"Account for user {data['name']} has been created successful"})
+    return jsonify({"message": "Mis-Match in Content-Type"}), 400
 
 def login():
 
-    if session_customerID == None:
-        content_type = request.headers.get('Content-Type')
-        if (content_type == "application/json"):
-            data = request.get_json()
-            if "phone_number" not in data or "password" not in data or not isinstance(data["phone_number"], str) or not isinstance(data["password"], str) or len(data["phone_number"]) != 10:
-                return "Incorrect or no data provided"
-            session = get_session()
-            customer_qry_result = session.query(Customer).filter(Customer.phone_number == data["phone_number"])
-            if not customer_qry_result:
-                return f"User {data['phone_number']} does not exist"
-            user = customer_qry_result[0]
-            if not (check_password_hash(user.password, data["password"])):
-                return "Invalid credentials passed"
-            
-            global session_customerID
-            session_customerID = user.id
-            session.close()
-            return f"Successfully logged in {user.name}"
-        return "Mis-Match in Content-Type"
-    return "Currently logged in\nLogout and try again"
+    global session_customerID
+    if session_customerID != None:
+        return jsonify({"message": "Currently logged in. Logout and try again"}), 400
+    content_type = request.headers.get('Content-Type')
+    if (content_type == "application/json"):
+        data = request.get_json()
+        if "phone_number" not in data or "password" not in data or not isinstance(data["phone_number"], str) or not isinstance(data["password"], str) or len(data["phone_number"]) != 10:
+            return jsonify({"message": "Incorrect or no data provided"}), 400
+        session = get_session()
+        customer_qry_result = session.query(Customer).filter(Customer.phone_number == data["phone_number"])
+        if not customer_qry_result:
+            return jsonify({"message": f"User {data['phone_number']} does not exist"}), 400
+        user = customer_qry_result[0]
+        if not (check_password_hash(user.password, data["password"])):
+            return jsonify({"message": "Invalid credentials passed"}), 400
+        
+        session_customerID = user.id
+        session.close()
+        return jsonify({"message": f"Successfully logged in {user.name}"})
+    return jsonify({"message": "Mis-Match in Content-Type"}), 400
 
 def logout():
     global session_customerID
     if not session_customerID:
-        return "No account is logged in"
+        return jsonify({"message": "No account is logged in"}), 400
     session_customerID = None
-    return "Successfully logged out"
+    return jsonify({"message": "Successfully logged out"})
 
 def get_movies():
     
     if not session_customerID:
-        return "Login to continue"
+        return jsonify({"message":"Login to continue"}), 400
     session = get_session()
     # print("Here mate")
     qry_results = session.query(Movie).all()
@@ -71,19 +71,19 @@ def get_screening():
 
     # print("Here at screening")
     if not session_customerID:
-        return "Login to continue"
+        return jsonify({"message":"Login to continue"}), 400
     content_type = request.headers.get("Content-Type")
     if (content_type == "application/json"):
         data = request.get_json()
         print(type(data["movie_id"]))
-        if "movie_id" not in data or not data or not isinstance(data["movie_id"], str):
-            return "Incorrect or no data provided"
+        if "movie_id" not in data or not data or not isinstance(data["movie_id"], str) or not data["movie_id"]:
+            return jsonify({"message":"Incorrect or no data provided"}), 400
         movie_id = data["movie_id"]
         session = get_session()
         qry_result = session.query(Screening).filter(Screening.movie_id == movie_id).all()
         # print(qry_result)
         if not qry_result:
-            return "Sorry, currently no screenings"
+            return jsonify({"Message":"Sorry, currently no screenings"}), 400
         screenings = {}
         for result in qry_result:
             # print(type(result.id), type(result.auditorium.name), type(result.movie.movie_name), type(result.date), type(result.start_time))
@@ -91,18 +91,18 @@ def get_screening():
         # print(type(screenings), screenings)
         session.close()
         return json.dumps(screenings)
-    return "Mis-Match in Content-Type"
+    return jsonify({"message":"Mis-Match in Content-Type"}), 400
 
 def make_reservation():
 
     if not session_customerID:
-        return "Login to continue"
+        return jsonify({"message": "Login to continue"}), 400
     content_type = request.headers.get("Content-Type")
     if (content_type == "application/json"):
         data = request.get_json()
         print(type(data["screening_id"]))
         if "screening_id" not in data or "num_seats" not in data or not data or not isinstance(data["screening_id"], str) or not isinstance(data["num_seats"], int):
-            return "Incorrect or no data provided"
+            return jsonify({"Message":"Incorrect or no data provided"}), 400
         
         request_screening_id = data["screening_id"]
         request_num_seats = data["num_seats"]
@@ -110,16 +110,16 @@ def make_reservation():
         session = get_session()
         screening_qry_result = session.query(Screening).filter(Screening.id == request_screening_id).all()
         if not screening_qry_result:
-            return "Enter a valid screening id"
+            return jsonify({"Message": "Enter a valid screening id"}), 400
         screening_qry_result = screening_qry_result[0]
         # print(type(screening_qry_result))
         # print(screening_qry_result)
         if screening_qry_result.seats_available == 0:
-            return "All seats are booked"
+            return jsonify({"Message": "All seats are booked"}), 400
         # print(screening_qry_result.seats_available, request_num_seats)
         if request_num_seats < 1 or screening_qry_result.seats_available < request_num_seats:
             # print("hererererere")
-            return "Please request for a valid number of seats"
+            return jsonify({"Message": "Please request for a valid number of seats"}), 400
         reserve = Reservation(request_num_seats)
         loggedin_customer = session.query(Customer).filter(Customer.id == session_customerID).all()[0]
         # print(loggedin_customer)
@@ -158,12 +158,12 @@ def make_reservation():
         for i in seats_booked:
             return_string_after_reservation += f" {i[0]}-{i[1]},"
         return return_string_after_reservation[:-1]
-    return "Mis-Match in Content-Type"
+    return jsonify({"Message": "Mis-Match in Content-Type"}), 400
 
 def get_reservations():
     
     if not session_customerID:
-        return "Login to continue"
+        return jsonify({"Message": "Login to continue"}), 400
 
     session = get_session()
     customer_qry_result = session.query(Customer).filter(Customer.id == session_customerID).all()
@@ -171,7 +171,7 @@ def get_reservations():
     customer_qry_result = customer_qry_result[0]
     customer_reservations_list = customer_qry_result.reservations
     if not customer_reservations_list:
-        return "No reservations made"
+        return jsonify({"Message": "No reservations made"}), 400
     # print(customer_reservations_list)
     customer_reservations = {}
     for reservation in customer_reservations_list:
