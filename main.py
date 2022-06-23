@@ -12,9 +12,9 @@ app = Flask(__name__)
 
 configure_app(app)
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     
     # session = get_session()
     # print(session.query(Movie).all())
-    app.run(debug=True)
-    pass
+    # app.run(debug=True)
+    # pass
