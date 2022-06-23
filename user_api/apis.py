@@ -8,6 +8,8 @@ session_customerID = None
 
 def sign_up():
 
+    if session_customerID:
+        return jsonify({"message": "Currently logged in. Please try after logging out"}), 400
     content_type = request.headers.get('Content-Type')
     if (content_type == "application/json"):
         data = request.get_json()
