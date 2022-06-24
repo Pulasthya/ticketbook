@@ -88,7 +88,7 @@ def get_screening():
         movie_id = data["movie_id"]
         session = get_session()
         qry_result = session.query(Screening).filter(Screening.movie_id == movie_id).all()
-        # print(qry_result)
+        print(qry_result)
         if not qry_result:
             session.close()
             return jsonify({"Message":"Sorry, currently no screenings"}), 400
@@ -142,6 +142,7 @@ def make_reservation():
                 return jsonify({"message": "Make sure to enter valid seats"}), 400
         
         reserve = Reservation(request_num_seats)
+        session.flush()
         loggedin_customer = session.query(Customer).filter(Customer.id == session_customerID).all()[0]
         reserve.customer = loggedin_customer
         reserve.screening = screening_qry_result
@@ -152,11 +153,14 @@ def make_reservation():
             seat_col = seat_split[1]
             seat_reserve = Reservation_Seating()
             seat_qry_result = session.query(Seat).filter(Seat.audi_id == screening_qry_result.audi_id).filter(Seat.row == seat_row).filter(Seat.col == seat_col).all()
-            # print(seat_qry_result)
+            print(seat_qry_result)
+            # breakpoint()
             seat_qry_result = seat_qry_result[0]
             seat_reserve.screening = screening_qry_result
-            seat_reserve.reservation = reserve
-            seat_reserve.seats = seat_qry_result
+            # seat_reserve.reservation = reserve
+            seat_reserve.reserve_id = reserve.id
+            seat_reserve.seat_id = seat_qry_result.id
+            # seat_reserve.seats = seat_qry_result
             session.add(seat_reserve)
 
         # print(reserve.customer)
@@ -165,8 +169,8 @@ def make_reservation():
         #     print("Here")
         #     print(i.seats)
         # print(reserve.reserve_seating)
-        screening_qry_result.seat_row_available = seat_row
-        screening_qry_result.seat_col_available = seat_col
+        # screening_qry_result.seat_row_available = seat_row
+        # screening_qry_result.seat_col_available = seat_col
         screening_qry_result.seats_available -= request_num_seats
         session.add(reserve)
         session.commit()
@@ -258,14 +262,16 @@ def get_reservations():
         return jsonify({"Message": "No reservations made"}), 400
     # print(customer_reservations_list)
     customer_reservations = {}
+    # print(customer_reservations_list)
     for reservation in customer_reservations_list:
-        
+        print(reservation)
         customer_reservations[reservation.id] = {"Auditorium":reservation.screening.auditorium.name, "Movie": reservation.screening.movie.movie_name}
         # print(type(reservation.reserve_seating))
         customer_reservations[reservation.id]["Seating"] = []
+        print(reservation.reserve_seating[0].seats)
         for i in reservation.reserve_seating:
         #     print(i)
         #     type(i)
             customer_reservations[reservation.id]["Seating"].append(f"{i.seats.row}-{i.seats.col}")
 
-    return customer_reservations
+    return jsonify(customer_reservations)
