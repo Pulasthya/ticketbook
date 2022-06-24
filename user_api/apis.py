@@ -154,6 +154,7 @@ def make_reservation():
             seat_qry_result = session.query(Seat).filter(Seat.audi_id == screening_qry_result.audi_id).filter(Seat.row == seat_row).filter(Seat.col == seat_col).all()
             # print(seat_qry_result)
             seat_qry_result = seat_qry_result[0]
+            seat_reserve.screening = screening_qry_result
             seat_reserve.reservation = reserve
             seat_reserve.seats = seat_qry_result
             session.add(seat_reserve)
