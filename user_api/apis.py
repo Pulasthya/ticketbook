@@ -98,7 +98,7 @@ def get_screening():
             screenings[result.id] = {"Auditorium":result.auditorium.name, "Movie Name":result.movie.movie_name, "Date":str(result.date), "Start-Time": str(result.start_time), "Available Seats": list(get_available_seats_screening(result.id))}
         # print(type(screenings), screenings)
         session.close()
-        return json.dumps(screenings)
+        return jsonify(screenings)
     return jsonify({"message":"Mis-Match in Content-Type"}), 400
 
 def make_reservation():
