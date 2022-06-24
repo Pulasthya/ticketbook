@@ -70,8 +70,8 @@ class Screening(Base):
     __tablename__ = "screening"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    audi_id = Column(String(36), ForeignKey("auditorium.id"), default=generate_uuid)
-    movie_id = Column(String(36), ForeignKey("movie.id"), default=generate_uuid)
+    audi_id = Column(String(36), ForeignKey("auditorium.id"))
+    movie_id = Column(String(36), ForeignKey("movie.id"))
     start_time = Column(Time, nullable=False)
     date = Column(Date, nullable=False)
     end_time = Column(Time, nullable=False)
@@ -80,6 +80,7 @@ class Screening(Base):
     auditorium = relationship("Auditorium", back_populates="screeings")
     movie = relationship("Movie", back_populates="screenings")
     reservations = relationship("Reservation", back_populates="screening")
+    reservation = relationship("Reservation_Seating", back_populates="screening")
 
     def __init__(self, start_time, date, end_time):
         self.start_time = start_time
@@ -96,7 +97,7 @@ class Seat(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     row = Column(CHAR, nullable=False)
     col = Column(Integer, nullable=False)
-    audi_id = Column(String(36), ForeignKey("auditorium.id"), default=generate_uuid)
+    audi_id = Column(String(36), ForeignKey("auditorium.id"))
 
     auditorium = relationship("Auditorium", back_populates="seats")
     reservation_seatings = relationship("Reservation_Seating", back_populates="seats", uselist=False)
@@ -113,8 +114,8 @@ class Reservation(Base):
     __tablename__ = "reservation"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    cust_id = Column(String(36), ForeignKey("customer.id"), default=generate_uuid)
-    screening_id = Column(String(36), ForeignKey("screening.id"), default=generate_uuid)
+    cust_id = Column(String(36), ForeignKey("customer.id"))
+    screening_id = Column(String(36), ForeignKey("screening.id"))
     seats = Column(Integer, nullable=False)
 
     def __init__(self, seats):
@@ -132,11 +133,13 @@ class Reservation_Seating(Base):
     __tablename__ = "reservation_seating"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    reserve_id = Column(String(36), ForeignKey("reservation.id"), default=generate_uuid)
-    seat_id = Column(String(36), ForeignKey("seat.id"), default=generate_uuid)
+    reserve_id = Column(String(36), ForeignKey("reservation.id"))
+    seat_id = Column(String(36), ForeignKey("seat.id"))
+    screening_id = Column(String(36), ForeignKey("screening.id"))
 
     # def __repr__(self) -> str:
     #     return f"{self.seats.row}-{self.seats.col} "
 
+    screening = relationship("Screening", back_populates="reservation")
     reservation = relationship("Reservation", back_populates="reserve_seating")
     seats = relationship("Seat", back_populates="reservation_seatings")
