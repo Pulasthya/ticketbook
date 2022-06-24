@@ -51,13 +51,21 @@ for i in data:
     print(i)
     print(i.seats)
 
-scr1 = Screening(time(19, 30), date(2022, 6, 19), time(22, 30))
+scr1 = Screening(time(19, 30), date(2022, 7, 1), time(22, 30))
 scr1.auditorium = audi1
 scr1.movie = vikram
 
-scr2 = Screening(time(12, 30), date(2022, 6, 20), time(15, 30))
+scr2 = Screening(time(12, 30), date(2022, 7, 2), time(15, 30))
 scr2.auditorium = audi2
 scr2.movie = sundar
+
+scr3 = Screening(time(13, 30), date(2022, 7, 1), time(16, 30))
+scr3.auditorium = audi1
+scr3.movie = vikram
+
+scr4 = Screening(time(9, 30), date(2022, 7, 2), time(12, 30))
+scr4.auditorium = audi2
+scr4.movie = sundar
 
 session.add(scr1)
 session.add(scr2)
