@@ -265,7 +265,7 @@ def get_reservations():
     # print(customer_reservations_list)
     for reservation in customer_reservations_list:
         print(reservation)
-        customer_reservations[reservation.id] = {"Auditorium":reservation.screening.auditorium.name, "Movie": reservation.screening.movie.movie_name}
+        customer_reservations[reservation.id] = {"Auditorium":reservation.screening.auditorium.name, "Movie": reservation.screening.movie.movie_name, "Date": str(reservation.screening.date), "Start-Time": str(reservation.screening.start_time)}
         # print(type(reservation.reserve_seating))
         customer_reservations[reservation.id]["Seating"] = []
         print(reservation.reserve_seating[0].seats)
