@@ -132,9 +132,9 @@ class Reservation_Seating(Base):
 
     __tablename__ = "reservation_seating"
 
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    reserve_id = Column(String(36), ForeignKey("reservation.id"))
-    seat_id = Column(String(36), ForeignKey("seat.id"))
+    # id = Column(String(36), primary_key=True, default=generate_uuid)
+    reserve_id = Column(String(36), ForeignKey("reservation.id"), primary_key=True)
+    seat_id = Column(String(36), ForeignKey("seat.id"), primary_key=True)
     screening_id = Column(String(36), ForeignKey("screening.id"))
 
     # def __repr__(self) -> str:
